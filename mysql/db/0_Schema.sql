@@ -21,6 +21,7 @@ CREATE TABLE isuumo.estate
     popularity_desc INTEGER AS (-popularity) NOT NULL
 );
 ALTER TABLE isuumo.estate ADD INDEX estate_popularity_id_idx(popularity_desc, id);
+ALTER TABLE isuumo.estate ADD INDEX estate_rent_id_idx(rent, id);
 
 
 CREATE TABLE isuumo.chair
@@ -41,3 +42,4 @@ CREATE TABLE isuumo.chair
     popularity_desc INTEGER AS (-popularity) NOT NULL
 );
 ALTER TABLE isuumo.chair ADD INDEX chair_popularity_id_idx(popularity_desc, id);
+ALTER TABLE isuumo.chair ADD INDEX chair_price_id_idx(price, id);
