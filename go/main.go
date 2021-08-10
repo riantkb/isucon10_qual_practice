@@ -878,6 +878,10 @@ func searchEstateNazotte(c echo.Context) error {
 
 	estatesInPolygon := []Estate{}
 	for _, estate := range estatesInBoundingBox {
+		if len(estatesInPolygon) >= NazotteLimit {
+			break
+		}
+
 		validatedEstate := Estate{}
 
 		point := fmt.Sprintf("'POINT(%f %f)'", estate.Latitude, estate.Longitude)
