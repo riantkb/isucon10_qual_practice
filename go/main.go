@@ -33,20 +33,20 @@ type InitializeResponse struct {
 }
 
 type Chair struct {
-	ID             int64  `db:"id" json:"id"`
-	Name           string `db:"name" json:"name"`
-	Description    string `db:"description" json:"description"`
-	Thumbnail      string `db:"thumbnail" json:"thumbnail"`
-	Price          int64  `db:"price" json:"price"`
-	Height         int64  `db:"height" json:"height"`
-	Width          int64  `db:"width" json:"width"`
-	Depth          int64  `db:"depth" json:"depth"`
-	Color          string `db:"color" json:"color"`
-	Features       string `db:"features" json:"features"`
-	Kind           string `db:"kind" json:"kind"`
-	Popularity     int64  `db:"popularity" json:"-"`
-	PopularityDesc int64  `db:"popularity_desc" json:"-"`
-	Stock          int64  `db:"stock" json:"-"`
+	ID          int64  `db:"id" json:"id"`
+	Name        string `db:"name" json:"name"`
+	Description string `db:"description" json:"description"`
+	Thumbnail   string `db:"thumbnail" json:"thumbnail"`
+	Price       int64  `db:"price" json:"price"`
+	Height      int64  `db:"height" json:"height"`
+	Width       int64  `db:"width" json:"width"`
+	Depth       int64  `db:"depth" json:"depth"`
+	Color       string `db:"color" json:"color"`
+	Features    string `db:"features" json:"features"`
+	Kind        string `db:"kind" json:"kind"`
+	Popularity  int64  `db:"popularity" json:"-"`
+	// PopularityDesc int64  `db:"popularity_desc" json:"-"`
+	Stock int64 `db:"stock" json:"-"`
 }
 
 type ChairSearchResponse struct {
@@ -60,19 +60,20 @@ type ChairListResponse struct {
 
 //Estate 物件
 type Estate struct {
-	ID             int64   `db:"id" json:"id"`
-	Thumbnail      string  `db:"thumbnail" json:"thumbnail"`
-	Name           string  `db:"name" json:"name"`
-	Description    string  `db:"description" json:"description"`
-	Latitude       float64 `db:"latitude" json:"latitude"`
-	Longitude      float64 `db:"longitude" json:"longitude"`
-	Address        string  `db:"address" json:"address"`
-	Rent           int64   `db:"rent" json:"rent"`
-	DoorHeight     int64   `db:"door_height" json:"doorHeight"`
-	DoorWidth      int64   `db:"door_width" json:"doorWidth"`
-	Features       string  `db:"features" json:"features"`
-	Popularity     int64   `db:"popularity" json:"-"`
-	PopularityDesc int64   `db:"popularity_desc" json:"-"`
+	ID          int64   `db:"id" json:"id"`
+	Thumbnail   string  `db:"thumbnail" json:"thumbnail"`
+	Name        string  `db:"name" json:"name"`
+	Description string  `db:"description" json:"description"`
+	Latitude    float64 `db:"latitude" json:"latitude"`
+	Longitude   float64 `db:"longitude" json:"longitude"`
+	Address     string  `db:"address" json:"address"`
+	Rent        int64   `db:"rent" json:"rent"`
+	DoorHeight  int64   `db:"door_height" json:"doorHeight"`
+	DoorWidth   int64   `db:"door_width" json:"doorWidth"`
+	Features    string  `db:"features" json:"features"`
+	Popularity  int64   `db:"popularity" json:"-"`
+	// PopularityDesc int64     `db:"popularity_desc" json:"-"`
+	// Coord          []float64 `db:"coord" json:"-"`
 }
 
 //EstateSearchResponse estate/searchへのレスポンスの形式
@@ -323,7 +324,7 @@ func getChairDetail(c echo.Context) error {
 	}
 
 	chair := Chair{}
-	query := `SELECT * FROM chair WHERE id = ?`
+	query := `SELECT id, name, description, thumbnail, price, height, width, depth, color, features, kind, popularity, stock FROM chair WHERE id = ?`
 	err = db.Get(&chair, query, id)
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -504,7 +505,7 @@ func searchChairs(c echo.Context) error {
 		return c.NoContent(http.StatusBadRequest)
 	}
 
-	searchQuery := "SELECT * FROM chair WHERE "
+	searchQuery := "SELECT id, name, description, thumbnail, price, height, width, depth, color, features, kind, popularity, stock FROM chair WHERE "
 	countQuery := "SELECT COUNT(*) FROM chair WHERE "
 	searchCondition := strings.Join(conditions, " AND ")
 	limitOffset := " ORDER BY popularity_desc ASC, id ASC LIMIT ? OFFSET ?"
@@ -559,7 +560,7 @@ func buyChair(c echo.Context) error {
 	defer tx.Rollback()
 
 	var chair Chair
-	err = tx.QueryRowx("SELECT * FROM chair WHERE id = ? AND stock > 0 FOR UPDATE", id).StructScan(&chair)
+	err = tx.QueryRowx("SELECT id, name, description, thumbnail, price, height, width, depth, color, features, kind, popularity, stock FROM chair WHERE id = ? AND stock > 0 FOR UPDATE", id).StructScan(&chair)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			c.Echo().Logger.Infof("buyChair chair id \"%v\" not found", id)
@@ -590,7 +591,7 @@ func getChairSearchCondition(c echo.Context) error {
 
 func getLowPricedChair(c echo.Context) error {
 	var chairs []Chair
-	query := `SELECT * FROM chair WHERE stock > 0 ORDER BY price ASC, id ASC LIMIT ?`
+	query := `SELECT id, name, description, thumbnail, price, height, width, depth, color, features, kind, popularity, stock FROM chair WHERE stock > 0 ORDER BY price ASC, id ASC LIMIT ?`
 	err := db.Select(&chairs, query, Limit)
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -612,7 +613,7 @@ func getEstateDetail(c echo.Context) error {
 	}
 
 	var estate Estate
-	err = db.Get(&estate, "SELECT * FROM estate WHERE id = ?", id)
+	err = db.Get(&estate, "SELECT id, name, description, thumbnail, address, latitude, longitude, rent, door_height, door_width, features, popularity FROM estate WHERE id = ?", id)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			c.Echo().Logger.Infof("getEstateDetail estate id %v not found", id)
@@ -772,7 +773,7 @@ func searchEstates(c echo.Context) error {
 		return c.NoContent(http.StatusBadRequest)
 	}
 
-	searchQuery := "SELECT * FROM estate WHERE "
+	searchQuery := "SELECT id, name, description, thumbnail, address, latitude, longitude, rent, door_height, door_width, features, popularity FROM estate WHERE "
 	countQuery := "SELECT COUNT(*) FROM estate WHERE "
 	searchCondition := strings.Join(conditions, " AND ")
 	limitOffset := " ORDER BY popularity_desc ASC, id ASC LIMIT ? OFFSET ?"
@@ -802,7 +803,7 @@ func searchEstates(c echo.Context) error {
 
 func getLowPricedEstate(c echo.Context) error {
 	estates := make([]Estate, 0, Limit)
-	query := `SELECT * FROM estate ORDER BY rent ASC, id ASC LIMIT ?`
+	query := `SELECT id, name, description, thumbnail, address, latitude, longitude, rent, door_height, door_width, features, popularity FROM estate ORDER BY rent ASC, id ASC LIMIT ?`
 	err := db.Select(&estates, query, Limit)
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -824,7 +825,7 @@ func searchRecommendedEstateWithChair(c echo.Context) error {
 	}
 
 	chair := Chair{}
-	query := `SELECT * FROM chair WHERE id = ?`
+	query := `SELECT id, name, description, thumbnail, price, height, width, depth, color, features, kind, popularity, stock FROM chair WHERE id = ?`
 	err = db.Get(&chair, query, id)
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -839,7 +840,7 @@ func searchRecommendedEstateWithChair(c echo.Context) error {
 	w := chair.Width
 	h := chair.Height
 	d := chair.Depth
-	query = `SELECT * FROM estate WHERE (door_width >= ? AND door_height >= ?) OR (door_width >= ? AND door_height >= ?) OR (door_width >= ? AND door_height >= ?) OR (door_width >= ? AND door_height >= ?) OR (door_width >= ? AND door_height >= ?) OR (door_width >= ? AND door_height >= ?) ORDER BY popularity_desc ASC, id ASC LIMIT ?`
+	query = `SELECT id, name, description, thumbnail, address, latitude, longitude, rent, door_height, door_width, features, popularity FROM estate WHERE (door_width >= ? AND door_height >= ?) OR (door_width >= ? AND door_height >= ?) OR (door_width >= ? AND door_height >= ?) OR (door_width >= ? AND door_height >= ?) OR (door_width >= ? AND door_height >= ?) OR (door_width >= ? AND door_height >= ?) ORDER BY popularity_desc ASC, id ASC LIMIT ?`
 	err = db.Select(&estates, query, w, h, w, d, h, w, h, d, d, w, d, h, Limit)
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -864,48 +865,31 @@ func searchEstateNazotte(c echo.Context) error {
 		return c.NoContent(http.StatusBadRequest)
 	}
 
-	b := coordinates.getBoundingBox()
-	estatesInBoundingBox := []Estate{}
-	query := `SELECT * FROM estate WHERE latitude <= ? AND latitude >= ? AND longitude <= ? AND longitude >= ? ORDER BY popularity_desc ASC, id ASC`
-	err = db.Select(&estatesInBoundingBox, query, b.BottomRightCorner.Latitude, b.TopLeftCorner.Latitude, b.BottomRightCorner.Longitude, b.TopLeftCorner.Longitude)
-	if err == sql.ErrNoRows {
-		c.Echo().Logger.Infof("select * from estate where latitude ...", err)
-		return c.JSON(http.StatusOK, EstateSearchResponse{Count: 0, Estates: []Estate{}})
-	} else if err != nil {
-		c.Echo().Logger.Errorf("database execution error : %v", err)
-		return c.NoContent(http.StatusInternalServerError)
-	}
+	// b := coordinates.getBoundingBox()
+	// estatesInBoundingBox := []Estate{}
+	// query := `SELECT * FROM estate WHERE latitude <= ? AND latitude >= ? AND longitude <= ? AND longitude >= ? ORDER BY popularity_desc ASC, id ASC`
+	// err = db.Select(&estatesInBoundingBox, query, b.BottomRightCorner.Latitude, b.TopLeftCorner.Latitude, b.BottomRightCorner.Longitude, b.TopLeftCorner.Longitude)
+	// if err == sql.ErrNoRows {
+	// 	c.Echo().Logger.Infof("select * from estate where latitude ...", err)
+	// 	return c.JSON(http.StatusOK, EstateSearchResponse{Count: 0, Estates: []Estate{}})
+	// } else if err != nil {
+	// 	c.Echo().Logger.Errorf("database execution error : %v", err)
+	// 	return c.NoContent(http.StatusInternalServerError)
+	// }
 
 	estatesInPolygon := []Estate{}
-	for _, estate := range estatesInBoundingBox {
-		if len(estatesInPolygon) >= NazotteLimit {
-			break
-		}
-
-		validatedEstate := Estate{}
-
-		point := fmt.Sprintf("'POINT(%f %f)'", estate.Latitude, estate.Longitude)
-		query := fmt.Sprintf(`SELECT * FROM estate WHERE id = ? AND ST_Contains(ST_PolygonFromText(%s), ST_GeomFromText(%s))`, coordinates.coordinatesToText(), point)
-		err = db.Get(&validatedEstate, query, estate.ID)
-		if err != nil {
-			if err == sql.ErrNoRows {
-				continue
-			} else {
-				c.Echo().Logger.Errorf("db access is failed on executing validate if estate is in polygon : %v", err)
-				return c.NoContent(http.StatusInternalServerError)
-			}
-		} else {
-			estatesInPolygon = append(estatesInPolygon, validatedEstate)
-		}
+	query := fmt.Sprintf(`SELECT id, name, description, thumbnail, address, latitude, longitude, rent, door_height, door_width, features, popularity FROM estate WHERE ST_Contains(ST_PolygonFromText(%s), coord) ORDER BY popularity_desc ASC, id ASC LIMIT ?`, coordinates.coordinatesToText())
+	err = db.Select(&estatesInPolygon, query, NazotteLimit)
+	if err == sql.ErrNoRows {
+		// c.Echo().Logger.Infof("select * from estate where latitude ...", err)
+		return c.JSON(http.StatusOK, EstateSearchResponse{Count: 0, Estates: []Estate{}})
+	} else if err != nil {
+		// c.Echo().Logger.Errorf("database execution error : %v", err)
+		return c.NoContent(http.StatusInternalServerError)
 	}
-
 	var re EstateSearchResponse
 	re.Estates = []Estate{}
-	if len(estatesInPolygon) > NazotteLimit {
-		re.Estates = estatesInPolygon[:NazotteLimit]
-	} else {
-		re.Estates = estatesInPolygon
-	}
+	re.Estates = estatesInPolygon
 	re.Count = int64(len(re.Estates))
 
 	return c.JSON(http.StatusOK, re)
@@ -931,7 +915,7 @@ func postEstateRequestDocument(c echo.Context) error {
 	}
 
 	estate := Estate{}
-	query := `SELECT * FROM estate WHERE id = ?`
+	query := `SELECT id, name, description, thumbnail, address, latitude, longitude, rent, door_height, door_width, features, popularity FROM estate WHERE id = ?`
 	err = db.Get(&estate, query, id)
 	if err != nil {
 		if err == sql.ErrNoRows {
