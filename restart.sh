@@ -1,3 +1,6 @@
+sudo cat etc/mysql/my.cnf > /etc/mysql/my.cnf
+sudo cat etc/nginx/nginx.conf > /etc/nginx/nginx.conf
+
 sudo systemctl restart mysql
 sudo systemctl restart nginx
 sudo systemctl restart isuumo.go
